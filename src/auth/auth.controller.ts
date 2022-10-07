@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  HttpStatus,
-  Post,
-  Request,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { SkipAuth } from './skip-auth.decorator';
@@ -30,14 +21,7 @@ export class AuthController {
 
   @SkipAuth()
   @Post('sign_up')
-  async sign_up(@Body() createUserDto: CreateUserDto, @Res() res: Response) {
-    try {
-      const user = await this.usersService.create(createUserDto);
-      res.status(HttpStatus.CREATED).json({ user });
-    } catch (err) {
-      res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ message: err.message });
-    }
+  async sign_up(@Body() createUserDto: CreateUserDto) {
+    return await this.usersService.create(createUserDto);
   }
 }
