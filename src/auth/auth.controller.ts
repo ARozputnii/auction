@@ -16,6 +16,8 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('sign_in')
   async login(@Request() req) {
+    req.user.is_remember_me = req.body?.remember_me;
+
     return this.authService.login(req.user);
   }
 

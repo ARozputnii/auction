@@ -28,6 +28,9 @@ export class User {
 
   @Prop()
   birth_day: Date;
+
+  @Prop({ default: false })
+  is_remember_me: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

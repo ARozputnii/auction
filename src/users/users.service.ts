@@ -5,6 +5,7 @@ import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { MongoErrorCodesEnum } from '../database/mongo-error-codes.enum';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -31,6 +32,17 @@ export class UsersService {
           HttpStatus.BAD_REQUEST,
         );
       }
+      throw new HttpException(
+        'Something went wrong',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async update(userParams: UpdateUserDto) {
+    try {
+      return await this.userModel.update({ ...userParams });
+    } catch (error) {
       throw new HttpException(
         'Something went wrong',
         HttpStatus.INTERNAL_SERVER_ERROR,
