@@ -16,14 +16,19 @@ export class AuthController {
   @UseGuards(LocalAuthGuard)
   @Post('sign_in')
   async login(@Request() req) {
-    req.user.is_remember_me = req.body?.remember_me;
+    const token = this.authService.login(req.user);
 
-    return this.authService.login(req.user);
+    if (token) {
+      req.user.is_remember_me = req.body.remember_me;
+      await this.usersService.update(req.user._id, req.user);
+    }
+
+    return token;
   }
 
   @SkipAuth()
   @Post('sign_up')
-  async sign_up(@Body() createUserDto: CreateUserDto) {
+  async signUp(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.create(createUserDto);
   }
 }

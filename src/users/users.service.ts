@@ -39,9 +39,9 @@ export class UsersService {
     }
   }
 
-  async update(userParams: UpdateUserDto) {
+  async update(id: string, userParams: UpdateUserDto) {
     try {
-      return await this.userModel.update({ ...userParams });
+      return await this.userModel.updateOne({ _id: id }, userParams);
     } catch (error) {
       throw new HttpException(
         'Something went wrong',
