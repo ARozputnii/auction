@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -25,9 +26,21 @@ export class AuthService {
 
   async login(user: any) {
     const payload = { email: user.email, id: user._id };
-    return {
-      access_token: this.jwtService.sign(payload),
-    };
+
+    const token = this.jwtService.sign(payload, {
+      secret: process.env.JWT_TOKEN_SECRET,
+      expiresIn: process.env.JWT_TOKEN_EXPIRATION_TIME,
+    });
+
+    return { access_token: token };
+  }
+
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const user = await this.usersService.findByEmail(forgotPasswordDto.email);
+
+    if (!user) {
+      throw new HttpException('Invalid email', HttpStatus.BAD_REQUEST);
+    }
   }
 
   private async verifyPassword(

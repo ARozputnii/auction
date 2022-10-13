@@ -4,6 +4,7 @@ import { LocalAuthGuard } from './local-auth.guard';
 import { SkipAuth } from './skip-auth.decorator';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 
 @Controller('api/auth')
 export class AuthController {
@@ -31,4 +32,11 @@ export class AuthController {
   async signUp(@Body() createUserDto: CreateUserDto) {
     return await this.usersService.create(createUserDto);
   }
+
+  @SkipAuth()
+  @Post('/forgot_password')
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto,): Promise<void> {
+
+  }
+
 }
