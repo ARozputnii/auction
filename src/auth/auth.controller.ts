@@ -1,10 +1,18 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Patch,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './local-auth.guard';
 import { SkipAuth } from './skip-auth.decorator';
 import { UsersService } from '../users/users.service';
 import { CreateUserDto } from '../users/dto/create-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('api/auth')
 export class AuthController {
@@ -20,8 +28,8 @@ export class AuthController {
     const token = this.authService.login(req.user);
 
     if (token) {
-      req.user.is_remember_me = req.body.remember_me;
-      await this.usersService.update(req.user._id, req.user);
+      const is_remember_me = req.body.remember_me;
+      await this.usersService.update(req.user._id, { is_remember_me });
     }
 
     return token;
@@ -35,8 +43,18 @@ export class AuthController {
 
   @SkipAuth()
   @Post('/forgot_password')
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto,): Promise<void> {
-
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return await this.authService.forgotPassword(forgotPasswordDto);
   }
 
+  @Patch('/reset_password')
+  async resetPassword(
+    @Request() req,
+    @Body() resetPasswordDto: ResetPasswordDto,
+  ) {
+    return await this.authService.resetPassword(
+      req.user.email,
+      resetPasswordDto,
+    );
+  }
 }

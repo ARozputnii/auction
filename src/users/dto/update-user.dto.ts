@@ -2,24 +2,34 @@ import {
   IsBoolean,
   IsDate,
   IsEmail,
-  IsNotEmpty,
   IsOptional,
+  IsString,
+  MaxLength,
   MinDate,
+  MinLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateUserDto {
-  @IsNotEmpty()
+  @IsOptional()
   @IsEmail()
   email: string;
 
-  @IsNotEmpty()
+  @IsOptional()
+  @MinLength(6, { message: 'Password must be 6 characters or more.' })
+  @MaxLength(100)
   password: string;
 
+  @IsOptional()
+  @IsString()
   first_name: string;
 
+  @IsOptional()
+  @IsString()
   last_name: string;
 
+  @IsOptional()
+  @IsString()
   phone: string;
 
   @IsOptional()

@@ -1,7 +1,6 @@
-import { User } from '../../../src/users/schemas/user.schema';
 import { faker } from '@faker-js/faker';
 
-export const userMock: User = {
+export const userMock: any = {
   email: faker.internet.email(),
   password: faker.internet.password(),
   first_name: faker.name.firstName(),

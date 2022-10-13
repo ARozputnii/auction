@@ -5,7 +5,7 @@ import { User, UserDocument } from './schemas/user.schema';
 import { CreateUserDto } from './dto/create-user.dto';
 import * as bcrypt from 'bcrypt';
 import { MongoErrorCodesEnum } from '../database/mongo-error-codes.enum';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { IUser } from './interfaces/user.interface';
 
 @Injectable()
 export class UsersService {
@@ -15,11 +15,9 @@ export class UsersService {
     return this.userModel.findOne({ email }).exec();
   }
 
-  async create(userParams: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(
-      userParams.password.toString(),
-      10,
-    );
+  async create(userParams: CreateUserDto): Promise<User> {
+    const hashedPassword = await this.bcryptPassword(userParams.password);
+
     try {
       return await this.userModel.create({
         ...userParams,
@@ -39,14 +37,18 @@ export class UsersService {
     }
   }
 
-  async update(id: string, userParams: UpdateUserDto) {
+  async update(id: string, payload: Partial<IUser>) {
     try {
-      return await this.userModel.updateOne({ _id: id }, userParams);
+      return this.userModel.updateOne({ _id: id }, payload);
     } catch (error) {
       throw new HttpException(
         'Something went wrong',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  async bcryptPassword(password: string): Promise<string> {
+    return await bcrypt.hash(password.toString(), 10);
   }
 }

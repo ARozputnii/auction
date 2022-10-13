@@ -3,7 +3,10 @@ import {
   IsEmail,
   IsNotEmpty,
   IsOptional,
+  IsString,
+  MaxLength,
   MinDate,
+  MinLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
 
@@ -12,13 +15,20 @@ export class CreateUserDto {
   @IsEmail()
   email: string;
 
-  @IsNotEmpty()
-  password: string;
+  @MinLength(6, { message: 'Password must be 6 characters or more.' })
+  @MaxLength(100)
+  readonly password: string;
 
-  first_name: string;
+  @IsOptional()
+  @IsString()
+  readonly first_name: string;
 
+  @IsOptional()
+  @IsString()
   last_name: string;
 
+  @IsOptional()
+  @IsString()
   phone: string;
 
   @IsOptional()

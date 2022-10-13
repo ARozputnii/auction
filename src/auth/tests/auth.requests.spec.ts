@@ -4,6 +4,7 @@ import { CreateUserDto } from '../../users/dto/create-user.dto';
 import { userMock } from '../../../test/mocks/entities/user.mock';
 import getServer from '../../../test/config/getServer';
 import getDbConnection from '../../../test/config/getDbConnection';
+import { MailService } from '../../mail/mail.service';
 
 describe('AuthController', () => {
   let dbConnection: Connection;
@@ -119,8 +120,124 @@ describe('AuthController', () => {
 
           expect(response.status).toBe(400);
           expect(response.body.message).toStrictEqual([
-            'password should not be empty',
+            'password must be shorter than or equal to 100 characters',
+            'Password must be 6 characters or more.',
           ]);
+        });
+      });
+    });
+  });
+
+  describe('forgotPassword', () => {
+    beforeEach(async () => {
+      await request(httpServer).post('/api/auth/sign_up').send(userMock);
+    });
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    const spy = jest
+      .spyOn(MailService.prototype, 'sendResetPasswordToken')
+      .mockImplementation(() => {
+        return true;
+      });
+
+    describe('when success', () => {
+      it('should send instruction on user email', async () => {
+        const params: object = { email: userMock.email };
+        const response = await request(httpServer)
+          .post('/api/auth/forgot_password')
+          .send(params);
+
+        expect(response.status).toBe(201);
+        expect(spy).toHaveBeenCalled();
+        expect(response.body.message).toBe(
+          'The instruction was successfully sent to the user mail',
+        );
+      });
+    });
+
+    describe('when errors', () => {
+      describe('when invalid email', () => {
+        it('should return an error', async () => {
+          const params: object = { email: 'wrong_email@b.com' };
+
+          const response = await request(httpServer)
+            .post('/api/auth/forgot_password')
+            .send(params);
+
+          expect(response.status).toBe(400);
+          expect(response.body.message).toBe('Invalid email');
+        });
+      });
+    });
+  });
+
+  describe('resetPassword', () => {
+    beforeEach(async () => {
+      await request(httpServer).post('/api/auth/sign_up').send(userMock);
+    });
+    const password = '111111';
+    const params: object = {
+      new_password: password,
+      new_password_confirmation: password,
+    };
+
+    describe('when success', () => {
+      it('must change the password', async () => {
+        const signInResponse = await request(httpServer)
+          .post('/api/auth/sign_in')
+          .send({
+            email: userMock.email,
+            password: userMock.password,
+          });
+
+        const token = signInResponse.body.access_token;
+
+        const response = await request(httpServer)
+          .patch('/api/auth/reset_password')
+          .set('Authorization', `Bearer ${token}`)
+          .send(params);
+
+        expect(response.status).toEqual(200);
+        expect(response.body.email).toBe(userMock.email);
+      });
+    });
+
+    describe('when errors', () => {
+      describe('when passwords do not match', () => {
+        it('should return an error', async () => {
+          const signInResponse = await request(httpServer)
+            .post('/api/auth/sign_in')
+            .send({
+              email: userMock.email,
+              password: userMock.password,
+            });
+
+          const token = signInResponse.body.access_token;
+
+          const params: object = {
+            new_password: password,
+            new_password_confirmation: 'incorrect',
+          };
+
+          const response = await request(httpServer)
+            .patch('/api/auth/reset_password')
+            .set('Authorization', `Bearer ${token}`)
+            .send(params);
+
+          expect(response.status).toBe(400);
+          expect(response.body.message).toBe('Passwords do not match');
+        });
+      });
+
+      describe('when 401 Unauthorized', () => {
+        it('should return an error', async () => {
+          const response = await request(httpServer)
+            .patch('/api/auth/reset_password')
+            .send(params);
+
+          expect(response.status).toBe(401);
         });
       });
     });
