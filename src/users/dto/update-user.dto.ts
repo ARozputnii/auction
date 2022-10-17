@@ -21,12 +21,17 @@ export class UpdateUserDto {
   password: string;
 
   @IsOptional()
-  @IsString()
-  first_name: string;
+  @MinLength(6, { message: 'Password must be 6 characters or more.' })
+  @MaxLength(100)
+  passwordConfirmation: string;
 
   @IsOptional()
   @IsString()
-  last_name: string;
+  firstName: string;
+
+  @IsOptional()
+  @IsString()
+  lastName: string;
 
   @IsOptional()
   @IsString()
@@ -36,9 +41,9 @@ export class UpdateUserDto {
   @Transform(({ value }) => new Date(value))
   @IsDate()
   @MinDate(new Date(new Date().getFullYear() - 21, 1))
-  birth_day: Date;
+  birthDay: Date;
 
   @IsOptional()
   @IsBoolean()
-  is_remember_me: boolean;
+  isRememberMe: boolean;
 }

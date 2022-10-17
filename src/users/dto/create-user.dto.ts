@@ -17,15 +17,19 @@ export class CreateUserDto {
 
   @MinLength(6, { message: 'Password must be 6 characters or more.' })
   @MaxLength(100)
-  readonly password: string;
+  password: string;
+
+  @MinLength(6, { message: 'Password must be 6 characters or more.' })
+  @MaxLength(100)
+  passwordConfirmation: string;
 
   @IsOptional()
   @IsString()
-  readonly first_name: string;
+  firstName: string;
 
   @IsOptional()
   @IsString()
-  last_name: string;
+  lastName: string;
 
   @IsOptional()
   @IsString()
@@ -35,5 +39,5 @@ export class CreateUserDto {
   @Transform(({ value }) => new Date(value))
   @IsDate()
   @MinDate(new Date(new Date().getFullYear() - 21, 1))
-  birth_day: Date;
+  birthDay: Date;
 }

@@ -14,7 +14,7 @@ export class MailService {
       subject: 'Reset password',
       template: './reset-password',
       context: {
-        name: user.first_name || user.email,
+        name: user.firstName || user.email,
         url,
       },
     });

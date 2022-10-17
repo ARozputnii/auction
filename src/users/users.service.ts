@@ -16,6 +16,10 @@ export class UsersService {
   }
 
   async create(userParams: CreateUserDto): Promise<User> {
+    if (userParams.password !== userParams.passwordConfirmation) {
+      throw new HttpException('Passwords do not match', HttpStatus.BAD_REQUEST);
+    }
+
     const hashedPassword = await this.bcryptPassword(userParams.password);
 
     try {
@@ -38,6 +42,13 @@ export class UsersService {
   }
 
   async update(id: string, payload: Partial<IUser>) {
+    if (
+      payload.passwordConfirmation &&
+      payload.password !== payload.passwordConfirmation
+    ) {
+      throw new HttpException('Passwords do not match', HttpStatus.BAD_REQUEST);
+    }
+
     try {
       return this.userModel.updateOne({ _id: id }, payload);
     } catch (error) {

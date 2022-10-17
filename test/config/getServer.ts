@@ -10,6 +10,7 @@ const getServer = async () => {
       whitelist: true,
     }),
   );
+  app.setGlobalPrefix('api');
   await app.init();
 
   return app.getHttpServer();

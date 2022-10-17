@@ -9,9 +9,9 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
-    private mailService: MailService,
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -30,7 +30,7 @@ export class AuthService {
   async login(user: any) {
     const token = this.createJwtPlayload(user);
 
-    return { access_token: token };
+    return { token };
   }
 
   async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
@@ -51,19 +51,17 @@ export class AuthService {
 
   async resetPassword(email: string, resetPasswordDto: ResetPasswordDto) {
     if (
-      resetPasswordDto.new_password ===
-      resetPasswordDto.new_password_confirmation
+      resetPasswordDto.newPassword !== resetPasswordDto.newPasswordConfirmation
     ) {
-      const user = await this.usersService.findByEmail(email);
-      const password = await this.usersService.bcryptPassword(
-        resetPasswordDto.new_password,
-      );
-      await this.usersService.update(user._id, { password });
-
-      return user;
-    } else {
       throw new HttpException('Passwords do not match', HttpStatus.BAD_REQUEST);
     }
+    const user = await this.usersService.findByEmail(email);
+    const password = await this.usersService.bcryptPassword(
+      resetPasswordDto.newPassword,
+    );
+    await this.usersService.update(user._id, { password });
+
+    return user;
   }
 
   private async verifyPassword(

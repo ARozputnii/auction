@@ -14,11 +14,11 @@ import { CreateUserDto } from '../users/dto/create-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 
-@Controller('api/auth')
+@Controller('/auth')
 export class AuthController {
   constructor(
-    private authService: AuthService,
-    private usersService: UsersService,
+    private readonly authService: AuthService,
+    private readonly usersService: UsersService,
   ) {}
 
   @SkipAuth()
@@ -28,8 +28,8 @@ export class AuthController {
     const token = this.authService.login(req.user);
 
     if (token) {
-      const is_remember_me = req.body.remember_me;
-      await this.usersService.update(req.user._id, { is_remember_me });
+      const isRememberMe = req.body.isRememberMe;
+      await this.usersService.update(req.user._id, { isRememberMe });
     }
 
     return token;

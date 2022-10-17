@@ -18,14 +18,14 @@ enum Status {
 @Schema({ timestamps: true })
 export class Order {
   @Prop()
-  arrival_location: string;
+  arrivalLocation: string;
 
   @Prop({
     type: String,
     enum: arrivalType,
     message: '{VALUE} is not supported',
   })
-  arrival_type: arrivalType;
+  arrivalType: arrivalType;
 
   @Prop({
     type: String,

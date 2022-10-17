@@ -1,9 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import mongoose, { Document } from 'mongoose';
+import { User } from '../../users/schemas/user.schema';
 
 export type LotDocument = Lot & Document;
 
-enum Status {
+export enum Status {
   pendind,
   inProcess,
   closed,
@@ -30,23 +31,30 @@ export class Lot {
     required: true,
     min: 0,
   })
-  current_price: Date;
+  currentPrice: number;
 
   @Prop({
     required: true,
     min: 0,
   })
-  estimated_price: Date;
+  estimatedPrice: number;
 
   @Prop({
     required: true,
   })
-  lot_start_time: Date;
+  lotStartTime: Date;
 
   @Prop({
     required: true,
   })
-  lot_end_time: Date;
+  lotEndTime: Date;
+
+  @Prop({
+    required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+  })
+  userId: User;
 }
 
 export const LotSchema = SchemaFactory.createForClass(Lot);

@@ -5,10 +5,13 @@ import { userMock } from '../../../test/mocks/entities/user.mock';
 import getServer from '../../../test/config/getServer';
 import getDbConnection from '../../../test/config/getDbConnection';
 import { MailService } from '../../mail/mail.service';
+import * as bcrypt from 'bcrypt';
 
 describe('AuthController', () => {
   let dbConnection: Connection;
   let httpServer: any;
+
+  const userData = userMock();
 
   beforeAll(async () => {
     httpServer = await getServer();
@@ -19,20 +22,28 @@ describe('AuthController', () => {
     await dbConnection.close();
   });
 
-  beforeEach(async () => {
+  afterEach(async () => {
     await dbConnection.collection('users').deleteMany({});
   });
 
   describe('login', () => {
     describe('when success', () => {
       beforeEach(async () => {
-        await request(httpServer).post('/api/auth/sign_up').send(userMock);
+        const hashedPassword = await bcrypt.hash(
+          userData.password.toString(),
+          10,
+        );
+
+        await dbConnection.collection('users').insertOne({
+          ...userData,
+          password: hashedPassword,
+        });
       });
 
       it('should create a user', async () => {
         const userParams: object = {
-          email: userMock.email,
-          password: userMock.password,
+          email: userData.email,
+          password: userData.password,
         };
 
         const response = await request(httpServer)
@@ -40,19 +51,19 @@ describe('AuthController', () => {
           .send(userParams);
 
         expect(response.status).toBe(201);
-        expect(response.body.hasOwnProperty('access_token')).toBe(true);
+        expect(response.body.hasOwnProperty('token')).toBe(true);
       });
     });
 
     describe('when errors', () => {
       describe('when password is incorrect', () => {
         beforeEach(async () => {
-          await request(httpServer).post('/api/auth/sign_up').send(userMock);
+          await request(httpServer).post('/api/auth/sign_up').send(userData);
         });
 
         it('should create a user', async () => {
           const userParams: object = {
-            email: userMock.email,
+            email: userData.email,
             password: 'wrong_pass',
           };
 
@@ -70,9 +81,9 @@ describe('AuthController', () => {
   describe('signUp', () => {
     describe('when success', () => {
       it('should create a user', async () => {
-        const userParams: CreateUserDto = userMock;
+        const userParams: CreateUserDto = userData;
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { _password, _birth_day, ...shortUserParams }: any = {
+        const { password, birthDay, ...shortUserParams }: any = {
           ...userParams,
         };
 
@@ -95,11 +106,11 @@ describe('AuthController', () => {
     describe('when errors', () => {
       describe('when user with that email already exists', () => {
         beforeEach(async () => {
-          await dbConnection.collection('users').insertOne(userMock);
+          await dbConnection.collection('users').insertOne(userData);
         });
 
         it('should error', async () => {
-          const userParams: CreateUserDto = userMock;
+          const userParams: CreateUserDto = userData;
           const response = await request(httpServer)
             .post('/api/auth/sign_up')
             .send(userParams);
@@ -113,7 +124,7 @@ describe('AuthController', () => {
 
       describe('when param password is empty', () => {
         it('should error', async () => {
-          const userParams: object = { email: userMock.email };
+          const userParams: object = { email: userData.email };
           const response = await request(httpServer)
             .post('/api/auth/sign_up')
             .send(userParams);
@@ -121,6 +132,8 @@ describe('AuthController', () => {
           expect(response.status).toBe(400);
           expect(response.body.message).toStrictEqual([
             'password must be shorter than or equal to 100 characters',
+            'Password must be 6 characters or more.',
+            'passwordConfirmation must be shorter than or equal to 100 characters',
             'Password must be 6 characters or more.',
           ]);
         });
@@ -130,7 +143,7 @@ describe('AuthController', () => {
 
   describe('forgotPassword', () => {
     beforeEach(async () => {
-      await request(httpServer).post('/api/auth/sign_up').send(userMock);
+      await request(httpServer).post('/api/auth/sign_up').send(userData);
     });
     afterEach(() => {
       jest.restoreAllMocks();
@@ -144,7 +157,7 @@ describe('AuthController', () => {
 
     describe('when success', () => {
       it('should send instruction on user email', async () => {
-        const params: object = { email: userMock.email };
+        const params: object = { email: userData.email };
         const response = await request(httpServer)
           .post('/api/auth/forgot_password')
           .send(params);
@@ -175,12 +188,12 @@ describe('AuthController', () => {
 
   describe('resetPassword', () => {
     beforeEach(async () => {
-      await request(httpServer).post('/api/auth/sign_up').send(userMock);
+      await request(httpServer).post('/api/auth/sign_up').send(userData);
     });
     const password = '111111';
     const params: object = {
-      new_password: password,
-      new_password_confirmation: password,
+      newPassword: password,
+      newPasswordConfirmation: password,
     };
 
     describe('when success', () => {
@@ -188,11 +201,11 @@ describe('AuthController', () => {
         const signInResponse = await request(httpServer)
           .post('/api/auth/sign_in')
           .send({
-            email: userMock.email,
-            password: userMock.password,
+            email: userData.email,
+            password: userData.password,
           });
 
-        const token = signInResponse.body.access_token;
+        const token = signInResponse.body.token;
 
         const response = await request(httpServer)
           .patch('/api/auth/reset_password')
@@ -200,7 +213,7 @@ describe('AuthController', () => {
           .send(params);
 
         expect(response.status).toEqual(200);
-        expect(response.body.email).toBe(userMock.email);
+        expect(response.body.email).toBe(userData.email);
       });
     });
 
@@ -210,15 +223,15 @@ describe('AuthController', () => {
           const signInResponse = await request(httpServer)
             .post('/api/auth/sign_in')
             .send({
-              email: userMock.email,
-              password: userMock.password,
+              email: userData.email,
+              password: userData.password,
             });
 
-          const token = signInResponse.body.access_token;
+          const token = signInResponse.body.token;
 
           const params: object = {
-            new_password: password,
-            new_password_confirmation: 'incorrect',
+            newPassword: password,
+            newPasswordConfirmation: 'incorrect',
           };
 
           const response = await request(httpServer)

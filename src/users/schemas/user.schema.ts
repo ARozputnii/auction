@@ -1,9 +1,19 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
+import { Lot } from '../../lots/schemas/lot.schema';
 
 export type UserDocument = User & Document;
 
-@Schema({ timestamps: true })
+@Schema({
+  toJSON: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      delete ret.password;
+      return ret;
+    },
+  },
+  timestamps: true,
+})
 export class User {
   @Prop({
     default: mongoose.Types.ObjectId,
@@ -23,19 +33,22 @@ export class User {
   password: string;
 
   @Prop()
-  first_name: string;
+  firstName: string;
 
   @Prop()
-  last_name: string;
+  lastName: string;
 
   @Prop()
   phone: string;
 
   @Prop()
-  birth_day: Date;
+  birthDay: Date;
 
   @Prop({ default: false })
-  is_remember_me: boolean;
+  isRememberMe: boolean;
+
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lot' }] })
+  lots: Lot[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
