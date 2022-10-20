@@ -1,9 +1,9 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateLotDto } from './dto/create-lot.dto';
-import { Lot, LotDocument } from './schemas/lot.schema';
 import { InjectModel } from '@nestjs/mongoose';
+import { Lot, LotDocument } from '#app-root/lots/schemas/lot.schema';
 import mongoose, { Model } from 'mongoose';
-import { UpdateLotDto } from './dto/update-lot.dto';
+import { CreateLotDto } from '#app-root/lots/dto/create-lot.dto';
+import { UpdateLotDto } from '#app-root/lots/dto/update-lot.dto';
 
 @Injectable()
 export class LotsService {

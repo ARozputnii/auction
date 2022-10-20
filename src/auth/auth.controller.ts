@@ -6,13 +6,13 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { LocalAuthGuard } from './local-auth.guard';
-import { SkipAuth } from './skip-auth.decorator';
-import { UsersService } from '../users/users.service';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AuthService } from '#app-root/auth/auth.service';
+import { UsersService } from '#app-root/users/users.service';
+import { SkipAuth } from '#app-root/auth/skip-auth.decorator';
+import { LocalAuthGuard } from '#app-root/auth/local-auth.guard';
+import { CreateUserDto } from '#app-root/users/dto/create-user.dto';
+import { ForgotPasswordDto } from '#app-root/auth/dto/forgot-password.dto';
+import { ResetPasswordDto } from '#app-root/auth/dto/reset-password.dto';
 
 @Controller('/auth')
 export class AuthController {

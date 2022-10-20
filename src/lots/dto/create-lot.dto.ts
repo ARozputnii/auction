@@ -6,9 +6,9 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { Status } from '../schemas/lot.schema';
+import { Status } from '#app-root/lots/schemas/lot.schema';
 import { Transform } from 'class-transformer';
-import { User } from '../../users/schemas/user.schema';
+import { User } from '#app-root/users/schemas/user.schema';
 
 export class CreateLotDto {
   @IsNotEmpty()

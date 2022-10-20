@@ -1,6 +1,6 @@
 import { faker } from '@faker-js/faker';
-import { getRandomEnumValue } from '../../config/getRandomEnumValue';
-import { Status } from '../../../src/lots/schemas/lot.schema';
+import { getRandomEnumValue } from '#test/config/getRandomEnumValue';
+import { Status } from '#app-root/lots/schemas/lot.schema';
 
 export const lotMock: any = () => {
   return {

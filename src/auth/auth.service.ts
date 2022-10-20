@@ -1,10 +1,10 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { UsersService } from '#app-root/users/users.service';
 import { JwtService } from '@nestjs/jwt';
+import { MailService } from '#app-root/mail/mail.service';
+import { ForgotPasswordDto } from '#app-root/auth/dto/forgot-password.dto';
+import { ResetPasswordDto } from '#app-root/auth/dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
-import { MailService } from '../mail/mail.service';
-import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {

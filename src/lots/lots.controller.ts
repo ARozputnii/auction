@@ -1,16 +1,16 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
   Request,
 } from '@nestjs/common';
-import { LotsService } from './lots.service';
-import { CreateLotDto } from './dto/create-lot.dto';
-import { UpdateLotDto } from './dto/update-lot.dto';
+import { LotsService } from '#app-root/lots/lots.service';
+import { CreateLotDto } from '#app-root/lots/dto/create-lot.dto';
+import { UpdateLotDto } from '#app-root/lots/dto/update-lot.dto';
 
 @Controller('/lots')
 export class LotsController {

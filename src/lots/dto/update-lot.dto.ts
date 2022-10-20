@@ -6,7 +6,7 @@ import {
   IsString,
   Min,
 } from 'class-validator';
-import { Status } from '../schemas/lot.schema';
+import { Status } from '#app-root/lots/schemas/lot.schema';
 import { Transform } from 'class-transformer';
 
 export class UpdateLotDto {

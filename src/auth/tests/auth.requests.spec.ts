@@ -1,11 +1,11 @@
 import { Connection } from 'mongoose';
-import * as request from 'supertest';
-import { CreateUserDto } from '../../users/dto/create-user.dto';
 import { userMock } from '../../../test/mocks/entities/user.mock';
 import getServer from '../../../test/config/getServer';
 import getDbConnection from '../../../test/config/getDbConnection';
-import { MailService } from '../../mail/mail.service';
 import * as bcrypt from 'bcrypt';
+import * as request from 'supertest';
+import { CreateUserDto } from '#app-root/users/dto/create-user.dto';
+import { MailService } from '#app-root/mail/mail.service';
 
 describe('AuthController', () => {
   let dbConnection: Connection;

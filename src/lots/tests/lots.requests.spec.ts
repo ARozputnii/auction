@@ -1,9 +1,9 @@
 import { Connection } from 'mongoose';
+import { lotMock } from '#test/mocks/entities/lot.mock';
+import getServer from '#test/config/getServer';
+import getDbConnection from '#test/config/getDbConnection';
+import { getAuthorizationToken } from '#test/config/getAuthorizationToken';
 import * as request from 'supertest';
-import getServer from '../../../test/config/getServer';
-import getDbConnection from '../../../test/config/getDbConnection';
-import { lotMock } from '../../../test/mocks/entities/lot.mock';
-import { getAuthorizationToken } from '../../../test/config/getAuthorizationToken';
 
 describe('LotsController', () => {
   let dbConnection: Connection;

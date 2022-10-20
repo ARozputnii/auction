@@ -1,6 +1,6 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { Document } from 'mongoose';
-import { User } from '../../users/schemas/user.schema';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { User } from '#app-root/users/schemas/user.schema';
 
 export type LotDocument = Lot & Document;
 

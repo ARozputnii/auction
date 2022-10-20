@@ -1,6 +1,6 @@
+import { moduleRef } from '#test/config/module.ref';
+import { AppModule } from '#app-root/app.module';
 import { ValidationPipe } from '@nestjs/common';
-import { moduleRef } from './module.ref';
-import { AppModule } from '../../src/app.module';
 
 const getServer = async () => {
   const module = await moduleRef(AppModule);

@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
-import { UsersModule } from './users/users.module';
-import { BidsModule } from './bids/bids.module';
-import { LotsModule } from './lots/lots.module';
-import { OrdersModule } from './orders/orders.module';
-import { AuthModule } from './auth/auth.module';
-import { JwtAuthGuard } from './auth/jwt-auth.guard';
-import { APP_GUARD } from '@nestjs/core';
-import { DatabaseModule } from './database/database.module';
-import { MailModule } from './mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
+import { DatabaseModule } from '#app-root/database/database.module';
+import { UsersModule } from '#app-root/users/users.module';
+import { BidsModule } from '#app-root/bids/bids.module';
+import { LotsModule } from '#app-root/lots/lots.module';
+import { OrdersModule } from '#app-root/orders/orders.module';
+import { AuthModule } from '#app-root/auth/auth.module';
+import { MailModule } from '#app-root/mail/mail.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from '#app-root/auth/jwt-auth.guard';
 
 @Module({
   imports: [

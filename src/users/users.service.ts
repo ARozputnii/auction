@@ -1,11 +1,11 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import { User, UserDocument } from '#app-root/users/schemas/user.schema';
 import { Model } from 'mongoose';
-import { User, UserDocument } from './schemas/user.schema';
-import { CreateUserDto } from './dto/create-user.dto';
+import { CreateUserDto } from '#app-root/users/dto/create-user.dto';
+import { MongoErrorCodesEnum } from '#app-root/database/mongo-error-codes.enum';
+import { IUser } from '#app-root/users/interfaces/user.interface';
 import * as bcrypt from 'bcrypt';
-import { MongoErrorCodesEnum } from '../database/mongo-error-codes.enum';
-import { IUser } from './interfaces/user.interface';
 
 @Injectable()
 export class UsersService {
