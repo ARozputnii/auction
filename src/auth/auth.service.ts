@@ -5,6 +5,7 @@ import { MailService } from '#app-root/mail/mail.service';
 import { ForgotPasswordDto } from '#app-root/auth/dto/forgot-password.dto';
 import { ResetPasswordDto } from '#app-root/auth/dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
+import { SignInDto } from '#app-root/auth/dto/sign-in.dto';
 
 @Injectable()
 export class AuthService {
@@ -14,17 +15,16 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  async validateUser(email: string, password: string) {
-    try {
-      const user = await this.usersService.findByEmail(email);
-      await this.verifyPassword(password, user.password);
-      return user;
-    } catch (error) {
+  async validateUser(signInDto: SignInDto) {
+    const user = await this.usersService.findByEmail(signInDto.email);
+    if (!user) {
       throw new HttpException(
         'Wrong credentials provided',
         HttpStatus.BAD_REQUEST,
       );
     }
+    await this.verifyPassword(signInDto.password, user.password);
+    return user;
   }
 
   async login(user: any) {
