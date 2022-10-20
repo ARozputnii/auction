@@ -5,7 +5,7 @@ import { MailService } from '#app-root/mail/mail.service';
 import { ForgotPasswordDto } from '#app-root/auth/dto/forgot-password.dto';
 import { ResetPasswordDto } from '#app-root/auth/dto/reset-password.dto';
 import * as bcrypt from 'bcrypt';
-import { SignInDto } from '#app-root/auth/dto/sign-in.dto';
+import { IUser } from '#app-root/users/interfaces/user.interface';
 
 @Injectable()
 export class AuthService {
@@ -15,20 +15,27 @@ export class AuthService {
     private readonly mailService: MailService,
   ) {}
 
-  async validateUser(signInDto: SignInDto) {
-    const user = await this.usersService.findByEmail(signInDto.email);
-    if (!user) {
+  async validateUser(email: string, password: string) {
+    const user = await this.usersService.findByEmail(email);
+    const isPasswordMatching = await this.isVerifyPassword(
+      password,
+      user?.password,
+    );
+
+    if (!user || !isPasswordMatching) {
       throw new HttpException(
         'Wrong credentials provided',
         HttpStatus.BAD_REQUEST,
       );
     }
-    await this.verifyPassword(signInDto.password, user.password);
     return user;
   }
 
-  async login(user: any) {
+  async login(user: IUser) {
     const token = this.createJwtPlayload(user);
+    await this.usersService.update(user._id, {
+      isRememberMe: user.isRememberMe,
+    });
 
     return { token };
   }
@@ -50,38 +57,44 @@ export class AuthService {
   }
 
   async resetPassword(email: string, resetPasswordDto: ResetPasswordDto) {
+    const user = await this.usersService.findByEmail(email);
+
+    const isPasswordMatching = await this.isVerifyPassword(
+      resetPasswordDto.currentPassword,
+      user.password,
+    );
+
+    if (!isPasswordMatching) {
+      throw new HttpException(
+        'Current password is incorrect',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     if (
       resetPasswordDto.newPassword !== resetPasswordDto.newPasswordConfirmation
     ) {
       throw new HttpException('Passwords do not match', HttpStatus.BAD_REQUEST);
     }
-    const user = await this.usersService.findByEmail(email);
+
     const password = await this.usersService.bcryptPassword(
       resetPasswordDto.newPassword,
     );
+
     await this.usersService.update(user._id, { password });
 
     return user;
   }
 
-  private async verifyPassword(
+  private async isVerifyPassword(
     plainTextPassword: string,
     hashedPassword: string,
   ) {
-    const isPasswordMatching = await bcrypt.compare(
-      plainTextPassword,
-      hashedPassword,
-    );
-    if (!isPasswordMatching) {
-      throw new HttpException(
-        'Wrong credentials provided',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    return await bcrypt.compare(plainTextPassword, hashedPassword);
   }
 
-  private createJwtPlayload({ _id, email }): string {
-    const payload = { email: email, id: _id };
+  private createJwtPlayload(user: IUser): string {
+    const payload = { id: user._id, email: user.email };
 
     return this.jwtService.sign(payload, {
       secret: process.env.JWT_TOKEN_SECRET,

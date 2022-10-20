@@ -4,11 +4,12 @@ import { getAuthorizationToken } from '#test/helpers/getAuthorizationToken';
 import { TestCore } from '#test/config/test-core';
 import { TestCoreBuilder } from '#test/config/test-core-builder';
 import { LotsModule } from '#app-root/lots/lots.module';
+import { SuperTest } from 'supertest';
 
 describe('LotsController', () => {
   let testCore: TestCore;
   let dbConnection: Connection;
-  let request: any;
+  let request: SuperTest<any>;
   let authorizationToken: string;
 
   const lotData = lotMock();
@@ -133,7 +134,7 @@ describe('LotsController', () => {
             .set('Authorization', `Bearer ${authorizationToken}`);
 
           expect(response.status).toBe(404);
-          expect(response.body.message).toBe('Not found!');
+          expect(response.body.message).toBe('Not Found');
         });
       });
     });
@@ -179,7 +180,7 @@ describe('LotsController', () => {
             .set('Authorization', `Bearer ${authorizationToken}`);
 
           expect(response.status).toBe(404);
-          expect(response.body.message).toBe('Not found!');
+          expect(response.body.message).toBe('Not Found');
         });
       });
 
@@ -219,10 +220,7 @@ describe('LotsController', () => {
           .delete(`/api/lots/${lotID}`)
           .set('Authorization', `Bearer ${authorizationToken}`);
 
-        expect(response.status).toBe(200);
-        expect(response.body.message).toBe(
-          `Lot id=${lotID} was successfully deleted!`,
-        );
+        expect(response.status).toBe(204);
       });
     });
 
@@ -242,7 +240,7 @@ describe('LotsController', () => {
             .set('Authorization', `Bearer ${authorizationToken}`);
 
           expect(response.status).toBe(404);
-          expect(response.body.message).toBe('Not found!');
+          expect(response.body.message).toBe('Not Found');
         });
       });
     });

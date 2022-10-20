@@ -4,40 +4,45 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
-  MaxLength,
-  MinDate,
   MinLength,
 } from 'class-validator';
 import { Transform } from 'class-transformer';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsMinYear } from '#app-root/validations/is-min-year.validation';
 
 export class CreateUserDto {
+  @ApiProperty({ example: 'example@gmail.com' })
   @IsNotEmpty()
   @IsEmail()
-  email: string;
+  readonly email: string;
 
+  @ApiProperty({ example: 'Password' })
   @MinLength(6, { message: 'Password must be 6 characters or more.' })
-  @MaxLength(100)
-  password: string;
+  readonly password: string;
 
+  @ApiProperty({ example: 'Password' })
   @MinLength(6, { message: 'Password must be 6 characters or more.' })
-  @MaxLength(100)
-  passwordConfirmation: string;
+  readonly passwordConfirmation: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
-  firstName: string;
+  readonly firstName: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
-  lastName: string;
+  readonly lastName: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsString()
-  phone: string;
+  readonly phone: string;
 
+  @ApiProperty({ example: '2000-01-01' })
   @IsOptional()
   @Transform(({ value }) => new Date(value))
+  @IsMinYear(21)
   @IsDate()
-  @MinDate(new Date(new Date().getFullYear() - 21, 1))
-  birthDay: Date;
+  readonly birthDay: Date;
 }

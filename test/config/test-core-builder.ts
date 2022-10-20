@@ -26,26 +26,4 @@ export class TestCoreBuilder {
 
     return new TestCore(app, module);
   }
-  //
-  // public overrideClass(
-  //   overridableResource: Type<unknown>,
-  //   overriddenResource: Type<unknown>,
-  //   providerType = ProviderType.Provider,
-  // ): this {
-  //   this.moduleBuilder[providerType](overridableResource).useClass(
-  //     overriddenResource,
-  //   );
-  //   return this;
-  // }
-  //
-  // public overrideValue(
-  //   overridableResource: string | Type<unknown>,
-  //   overriddenResource: unknown,
-  //   providerType = ProviderType.Provider,
-  // ): this {
-  //   this.moduleBuilder[providerType](overridableResource).useValue(
-  //     overriddenResource,
-  //   );
-  //   return this;
-  // }
 }
