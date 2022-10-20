@@ -6,7 +6,7 @@ export type BidDocument = Bid & Document;
 @Schema({ timestamps: true })
 export class Bid {
   @Prop()
-  proposed_price: number;
+  proposedPrice: number;
 }
 
 export const BidSchema = SchemaFactory.createForClass(Bid);

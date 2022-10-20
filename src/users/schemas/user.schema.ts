@@ -1,27 +1,54 @@
+import mongoose, { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Lot } from '#app-root/lots/schemas/lot.schema';
 
 export type UserDocument = User & Document;
 
-@Schema({ timestamps: true })
+@Schema({
+  toJSON: {
+    virtuals: true,
+    transform: (doc, ret) => {
+      delete ret.password;
+      return ret;
+    },
+  },
+  timestamps: true,
+})
 export class User {
-  @Prop()
+  @Prop({
+    default: mongoose.Types.ObjectId,
+  })
+  _id: string;
+
+  @Prop({
+    required: true,
+    unique: true,
+    index: true,
+  })
   email: string;
 
-  @Prop()
+  @Prop({
+    required: true,
+  })
   password: string;
 
   @Prop()
-  first_name: string;
+  firstName: string;
 
   @Prop()
-  last_name: string;
+  lastName: string;
 
   @Prop()
   phone: string;
 
   @Prop()
-  birth_day: Date;
+  birthDay: Date;
+
+  @Prop({ default: false })
+  isRememberMe: boolean;
+
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Lot' }] })
+  lots: Lot[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
