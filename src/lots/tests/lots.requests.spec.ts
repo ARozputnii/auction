@@ -1,23 +1,28 @@
 import { Connection } from 'mongoose';
 import { lotMock } from '#test/mocks/entities/lot.mock';
-import getServer from '#test/config/getServer';
-import getDbConnection from '#test/config/getDbConnection';
-import { getAuthorizationToken } from '#test/config/getAuthorizationToken';
-import * as request from 'supertest';
+import { getAuthorizationToken } from '#test/helpers/getAuthorizationToken';
+import { TestCore } from '#test/config/test-core';
+import { TestCoreBuilder } from '#test/config/test-core-builder';
+import { LotsModule } from '#app-root/lots/lots.module';
 
 describe('LotsController', () => {
+  let testCore: TestCore;
   let dbConnection: Connection;
-  let httpServer: any;
+  let request: any;
+  let authorizationToken: string;
 
   const lotData = lotMock();
 
   beforeAll(async () => {
-    httpServer = await getServer();
-    dbConnection = await getDbConnection();
+    testCore = await TestCoreBuilder.init(LotsModule).build();
+
+    request = testCore.httpRequest;
+    dbConnection = testCore.dbConnection;
+    authorizationToken = await getAuthorizationToken(testCore);
   });
 
   afterAll(async () => {
-    await dbConnection.close();
+    await testCore.closeApp();
   });
 
   afterEach(async () => {
@@ -32,8 +37,7 @@ describe('LotsController', () => {
       });
 
       it('should be return all lots', async () => {
-        const authorizationToken = await getAuthorizationToken();
-        const response = await request(httpServer)
+        const response = await request
           .get('/api/lots')
           .set('Authorization', `Bearer ${authorizationToken}`);
 
@@ -45,7 +49,7 @@ describe('LotsController', () => {
     describe('when errors', () => {
       describe('when Unauthorized', () => {
         it('should be status 401', async () => {
-          const response = await request(httpServer).get('/api/lots');
+          const response = await request.get('/api/lots');
 
           expect(response.status).toBe(401);
         });
@@ -56,8 +60,7 @@ describe('LotsController', () => {
   describe('create', () => {
     describe('when success', () => {
       it('should be create lot', async () => {
-        const authorizationToken = await getAuthorizationToken();
-        const response = await request(httpServer)
+        const response = await request
           .post('/api/lots')
           .send(lotData)
           .set('Authorization', `Bearer ${authorizationToken}`);
@@ -70,9 +73,7 @@ describe('LotsController', () => {
     describe('when errors', () => {
       describe('when Unauthorized', () => {
         it('should be status 401', async () => {
-          const response = await request(httpServer)
-            .post('/api/lots')
-            .send(lotData);
+          const response = await request.post('/api/lots').send(lotData);
 
           expect(response.status).toBe(401);
         });
@@ -82,8 +83,7 @@ describe('LotsController', () => {
         it('should be create lot', async () => {
           lotData.title = '';
 
-          const authorizationToken = await getAuthorizationToken();
-          const response = await request(httpServer)
+          const response = await request
             .post('/api/lots')
             .send(lotData)
             .set('Authorization', `Bearer ${authorizationToken}`);
@@ -104,12 +104,11 @@ describe('LotsController', () => {
 
     describe('when success', () => {
       it('should be create lot', async () => {
-        const authorizationToken = await getAuthorizationToken();
-        const requestOnFindAll = await request(httpServer)
+        const requestOnFindAll = await request
           .get('/api/lots')
           .set('Authorization', `Bearer ${authorizationToken}`);
         const lotID = requestOnFindAll.body[0]._id;
-        const response = await request(httpServer)
+        const response = await request
           .get(`/api/lots/${lotID}`)
           .set('Authorization', `Bearer ${authorizationToken}`);
 
@@ -121,9 +120,7 @@ describe('LotsController', () => {
     describe('when errors', () => {
       describe('when Unauthorized', () => {
         it('should be status 401', async () => {
-          const response = await request(httpServer)
-            .post('/api/lots')
-            .send(lotData);
+          const response = await request.post('/api/lots').send(lotData);
 
           expect(response.status).toBe(401);
         });
@@ -131,8 +128,7 @@ describe('LotsController', () => {
 
       describe('when lot not found', () => {
         it('should be create lot', async () => {
-          const authorizationToken = await getAuthorizationToken();
-          const response = await request(httpServer)
+          const response = await request
             .get(`/api/lots/some_lot_ID`)
             .set('Authorization', `Bearer ${authorizationToken}`);
 
@@ -150,13 +146,12 @@ describe('LotsController', () => {
 
     describe('when success', () => {
       it('should be create lot', async () => {
-        const authorizationToken = await getAuthorizationToken();
-        const requestOnFindAll = await request(httpServer)
+        const requestOnFindAll = await request
           .get('/api/lots')
           .set('Authorization', `Bearer ${authorizationToken}`);
         const lotID = requestOnFindAll.body[0]._id;
         const lotParams = { title: 'new title' };
-        const response = await request(httpServer)
+        const response = await request
           .patch(`/api/lots/${lotID}`)
           .send(lotParams)
           .set('Authorization', `Bearer ${authorizationToken}`);
@@ -169,7 +164,7 @@ describe('LotsController', () => {
     describe('when errors', () => {
       describe('when Unauthorized', () => {
         it('should be status 401', async () => {
-          const response = await request(httpServer)
+          const response = await request
             .patch(`/api/lots/some_lotID`)
             .send(lotData);
 
@@ -179,8 +174,7 @@ describe('LotsController', () => {
 
       describe('when lot not found', () => {
         it('should be create lot', async () => {
-          const authorizationToken = await getAuthorizationToken();
-          const response = await request(httpServer)
+          const response = await request
             .patch(`/api/lots/some_lot_ID`)
             .set('Authorization', `Bearer ${authorizationToken}`);
 
@@ -191,13 +185,12 @@ describe('LotsController', () => {
 
       describe('when title not present', () => {
         it('should be create lot', async () => {
-          const authorizationToken = await getAuthorizationToken();
-          const requestOnFindAll = await request(httpServer)
+          const requestOnFindAll = await request
             .get('/api/lots')
             .set('Authorization', `Bearer ${authorizationToken}`);
           const lotID = requestOnFindAll.body[0]._id;
           const lotParams = { title: '' };
-          const response = await request(httpServer)
+          const response = await request
             .patch(`/api/lots/${lotID}`)
             .send(lotParams)
             .set('Authorization', `Bearer ${authorizationToken}`);
@@ -218,12 +211,11 @@ describe('LotsController', () => {
 
     describe('when success', () => {
       it('should be create lot', async () => {
-        const authorizationToken = await getAuthorizationToken();
-        const requestOnFindAll = await request(httpServer)
+        const requestOnFindAll = await request
           .get('/api/lots')
           .set('Authorization', `Bearer ${authorizationToken}`);
         const lotID = requestOnFindAll.body[0]._id;
-        const response = await request(httpServer)
+        const response = await request
           .delete(`/api/lots/${lotID}`)
           .set('Authorization', `Bearer ${authorizationToken}`);
 
@@ -237,9 +229,7 @@ describe('LotsController', () => {
     describe('when errors', () => {
       describe('when Unauthorized', () => {
         it('should be status 401', async () => {
-          const response = await request(httpServer).delete(
-            `/api/lots/some_lotID}`,
-          );
+          const response = await request.delete(`/api/lots/some_lotID}`);
 
           expect(response.status).toBe(401);
         });
@@ -247,8 +237,7 @@ describe('LotsController', () => {
 
       describe('when lot not found', () => {
         it('should be create lot', async () => {
-          const authorizationToken = await getAuthorizationToken();
-          const response = await request(httpServer)
+          const response = await request
             .delete(`/api/lots/some_lot_ID`)
             .set('Authorization', `Bearer ${authorizationToken}`);
 

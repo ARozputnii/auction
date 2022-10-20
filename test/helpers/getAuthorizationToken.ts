@@ -1,16 +1,15 @@
-import { userMock } from '#test/mocks/entities/user.mock';
-import getServer from '#test/config/getServer';
-import getDbConnection from '#test/config/getDbConnection';
 import * as bcrypt from 'bcrypt';
-import * as request from 'supertest';
+import { userMock } from '#test/mocks/entities/user.mock';
+import { TestCore } from '#test/config/test-core';
 
 const userMockData = userMock();
 
 export const getAuthorizationToken = async (
+  testCore: TestCore,
   userData = userMockData,
 ): Promise<string> => {
-  const httpServer = await getServer();
-  const dbConnection = await getDbConnection();
+  const request = testCore.httpRequest;
+  const dbConnection = testCore.dbConnection;
 
   const hashedPassword = await bcrypt.hash(userData.password.toString(), 10);
 
@@ -24,9 +23,7 @@ export const getAuthorizationToken = async (
     password: userData.password,
   };
 
-  const response = await request(httpServer)
-    .post('/api/auth/sign_in')
-    .send(userParams);
+  const response = await request.post('/api/auth/sign_in').send(userParams);
 
   return response.body.token;
 };
