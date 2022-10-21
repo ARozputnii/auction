@@ -1,12 +1,11 @@
-import { Document } from 'mongoose';
-
-export interface IUser extends Document {
+export interface IUser {
+  readonly _id?: string;
   readonly email: string;
   readonly password: string;
-  readonly passwordConfirmation: string;
+  readonly passwordConfirmation?: string;
   readonly lastName: string;
   readonly firstName: string;
   readonly phone: string;
-  readonly birthDay: string;
+  readonly birthDay: Date;
   readonly isRememberMe: boolean;
 }

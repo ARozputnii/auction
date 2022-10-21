@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { getRandomEnumValue } from '#test/config/getRandomEnumValue';
+import { getRandomEnumValue } from '#test/helpers/getRandomEnumValue';
 import { Status } from '#app-root/lots/schemas/lot.schema';
 
 export const lotMock: any = () => {

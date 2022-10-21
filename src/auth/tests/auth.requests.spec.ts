@@ -1,25 +1,29 @@
 import { Connection } from 'mongoose';
-import { userMock } from '../../../test/mocks/entities/user.mock';
-import getServer from '../../../test/config/getServer';
-import getDbConnection from '../../../test/config/getDbConnection';
 import * as bcrypt from 'bcrypt';
-import * as request from 'supertest';
-import { CreateUserDto } from '#app-root/users/dto/create-user.dto';
+import { userMock } from '#test/mocks/entities/user.mock';
 import { MailService } from '#app-root/mail/mail.service';
+import { TestCoreBuilder } from '#test/config/test-core-builder';
+import { AuthModule } from '#app-root/auth/auth.module';
+import { TestCore } from '#test/config/test-core';
+import { getAuthorizationToken } from '#test/helpers/getAuthorizationToken';
+import { SuperTest } from 'supertest';
 
 describe('AuthController', () => {
+  let testCore: TestCore;
   let dbConnection: Connection;
-  let httpServer: any;
+  let request: SuperTest<any>;
 
   const userData = userMock();
 
   beforeAll(async () => {
-    httpServer = await getServer();
-    dbConnection = await getDbConnection();
+    testCore = await TestCoreBuilder.init(AuthModule).build();
+
+    request = testCore.httpRequest;
+    dbConnection = testCore.dbConnection;
   });
 
   afterAll(async () => {
-    await dbConnection.close();
+    await testCore.closeApp();
   });
 
   afterEach(async () => {
@@ -46,7 +50,7 @@ describe('AuthController', () => {
           password: userData.password,
         };
 
-        const response = await request(httpServer)
+        const response = await request
           .post('/api/auth/sign_in')
           .send(userParams);
 
@@ -58,7 +62,7 @@ describe('AuthController', () => {
     describe('when errors', () => {
       describe('when password is incorrect', () => {
         beforeEach(async () => {
-          await request(httpServer).post('/api/auth/sign_up').send(userData);
+          await request.post('/api/auth/sign_up').send(userData);
         });
 
         it('should create a user', async () => {
@@ -67,7 +71,7 @@ describe('AuthController', () => {
             password: 'wrong_pass',
           };
 
-          const response = await request(httpServer)
+          const response = await request
             .post('/api/auth/sign_in')
             .send(userParams);
 
@@ -81,39 +85,26 @@ describe('AuthController', () => {
   describe('signUp', () => {
     describe('when success', () => {
       it('should create a user', async () => {
-        const userParams: CreateUserDto = userData;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { password, birthDay, ...shortUserParams }: any = {
-          ...userParams,
-        };
+        const response = await request.post('/api/auth/sign_up').send(userData);
 
-        const response = await request(httpServer)
-          .post('/api/auth/sign_up')
-          .send(userParams);
-
-        expect(response.status).toBe(201);
-        // expect(response.body).toMatchObject(shortUserParams);
-        expect(response.body.email).toBe(shortUserParams.email);
+        // expect(response.status).toBe(201);
+        expect(response.body.email).toBe(userData.email);
 
         const user = await dbConnection
           .collection('users')
-          .findOne({ email: userParams.email });
-        // expect(user).toMatchObject(shortUserParams);
-        expect(user.email).toBe(shortUserParams.email);
+          .findOne({ email: userData.email });
+        expect(user.email).toBe(userData.email);
       });
     });
 
     describe('when errors', () => {
       describe('when user with that email already exists', () => {
-        beforeEach(async () => {
-          await dbConnection.collection('users').insertOne(userData);
-        });
-
         it('should error', async () => {
-          const userParams: CreateUserDto = userData;
-          const response = await request(httpServer)
+          await dbConnection.collection('users').insertOne(userData);
+
+          const response = await request
             .post('/api/auth/sign_up')
-            .send(userParams);
+            .send(userData);
 
           expect(response.status).toBe(400);
           expect(response.body.message).toBe(
@@ -125,15 +116,13 @@ describe('AuthController', () => {
       describe('when param password is empty', () => {
         it('should error', async () => {
           const userParams: object = { email: userData.email };
-          const response = await request(httpServer)
+          const response = await request
             .post('/api/auth/sign_up')
             .send(userParams);
 
           expect(response.status).toBe(400);
           expect(response.body.message).toStrictEqual([
-            'password must be shorter than or equal to 100 characters',
             'Password must be 6 characters or more.',
-            'passwordConfirmation must be shorter than or equal to 100 characters',
             'Password must be 6 characters or more.',
           ]);
         });
@@ -143,7 +132,7 @@ describe('AuthController', () => {
 
   describe('forgotPassword', () => {
     beforeEach(async () => {
-      await request(httpServer).post('/api/auth/sign_up').send(userData);
+      await request.post('/api/auth/sign_up').send(userData);
     });
     afterEach(() => {
       jest.restoreAllMocks();
@@ -158,7 +147,7 @@ describe('AuthController', () => {
     describe('when success', () => {
       it('should send instruction on user email', async () => {
         const params: object = { email: userData.email };
-        const response = await request(httpServer)
+        const response = await request
           .post('/api/auth/forgot_password')
           .send(params);
 
@@ -175,7 +164,7 @@ describe('AuthController', () => {
         it('should return an error', async () => {
           const params: object = { email: 'wrong_email@b.com' };
 
-          const response = await request(httpServer)
+          const response = await request
             .post('/api/auth/forgot_password')
             .send(params);
 
@@ -187,56 +176,69 @@ describe('AuthController', () => {
   });
 
   describe('resetPassword', () => {
-    beforeEach(async () => {
-      await request(httpServer).post('/api/auth/sign_up').send(userData);
-    });
-    const password = '111111';
+    const newPassword = '111111';
     const params: object = {
-      newPassword: password,
-      newPasswordConfirmation: password,
+      currentPassword: userData.password,
+      newPassword,
+      newPasswordConfirmation: newPassword,
     };
 
     describe('when success', () => {
       it('must change the password', async () => {
-        const signInResponse = await request(httpServer)
-          .post('/api/auth/sign_in')
-          .send({
-            email: userData.email,
-            password: userData.password,
-          });
+        const authorizationToken = await getAuthorizationToken(
+          testCore,
+          userData,
+        );
 
-        const token = signInResponse.body.token;
-
-        const response = await request(httpServer)
+        const response = await request
           .patch('/api/auth/reset_password')
-          .set('Authorization', `Bearer ${token}`)
+          .set('Authorization', `Bearer ${authorizationToken}`)
           .send(params);
 
-        expect(response.status).toEqual(200);
+        expect(response.status).toBe(200);
         expect(response.body.email).toBe(userData.email);
       });
     });
 
     describe('when errors', () => {
-      describe('when passwords do not match', () => {
+      describe('when current password is incorrect', () => {
         it('should return an error', async () => {
-          const signInResponse = await request(httpServer)
-            .post('/api/auth/sign_in')
-            .send({
-              email: userData.email,
-              password: userData.password,
-            });
-
-          const token = signInResponse.body.token;
+          const authorizationToken = await getAuthorizationToken(
+            testCore,
+            userData,
+          );
 
           const params: object = {
-            newPassword: password,
+            currentPassword: 'incorrect',
+            newPassword,
+            newPasswordConfirmation: newPassword,
+          };
+          const response = await request
+            .patch('/api/auth/reset_password')
+            .set('Authorization', `Bearer ${authorizationToken}`)
+            .send(params);
+
+          expect(response.status).toBe(400);
+          expect(response.body.message).toBe('Current password is incorrect');
+        });
+      });
+
+      describe('when passwords do not match', () => {
+        it('should return an error', async () => {
+          const authorizationToken = await getAuthorizationToken(
+            testCore,
+            userData,
+          );
+
+          const params: object = {
+            currentPassword: userData.password,
+            newPassword,
             newPasswordConfirmation: 'incorrect',
           };
 
-          const response = await request(httpServer)
+          const response = await request
             .patch('/api/auth/reset_password')
-            .set('Authorization', `Bearer ${token}`)
+            .set('Authorization', `Bearer ${authorizationToken}`)
             .send(params);
 
           expect(response.status).toBe(400);
@@ -246,7 +248,7 @@ describe('AuthController', () => {
 
       describe('when 401 Unauthorized', () => {
         it('should return an error', async () => {
-          const response = await request(httpServer)
+          const response = await request
             .patch('/api/auth/reset_password')
             .send(params);
 

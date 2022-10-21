@@ -10,7 +10,7 @@ export const userMock: any = () => {
     firstName: faker.name.firstName(),
     lastName: faker.name.lastName(),
     phone: faker.phone.number(),
-    birthDay: new Date(),
+    birthDay: new Date(new Date().getFullYear() - 22, 1),
     isRememberMe: false,
   };
 };
