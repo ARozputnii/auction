@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
 } from '@nestjs/common';
 import { LotsService } from '#app-root/lots/lots.service';
@@ -23,6 +24,8 @@ import {
 } from '@nestjs/swagger';
 import { SwaggerOptionsUtil } from '#app-root/utils/swagger-options.util';
 import { MongoIdValidationPipe } from '#app-root/validations/mongo-id.validation.pipe';
+import { CurrentUser } from '#app-root/auth/decorators/current-user.decorator';
+import { IUser } from '#app-root/users/interfaces/user.interface';
 
 @ApiTags('Lots')
 @Controller('/lots')
@@ -33,8 +36,11 @@ export class LotsController {
   @ApiResponse(SwaggerOptionsUtil.created('Return created lot'))
   @ApiUnauthorizedResponse(SwaggerOptionsUtil.unauthorized())
   @Post()
-  create(@Body() createLotDto: CreateLotDto, @Request() req) {
-    createLotDto.userId = req.user.id;
+  create(
+    @Body() createLotDto: CreateLotDto,
+    @CurrentUser() currentUser: IUser,
+  ) {
+    createLotDto.userId = currentUser.id;
     return this.lotsService.create(createLotDto);
   }
 
@@ -42,8 +48,9 @@ export class LotsController {
   @ApiResponse(SwaggerOptionsUtil.ok('Return all lots'))
   @ApiUnauthorizedResponse(SwaggerOptionsUtil.unauthorized())
   @Get()
-  findAll() {
-    return this.lotsService.findAll();
+  findAll(@Query('own') own: boolean, @CurrentUser() currentUser: IUser) {
+    const filters = { own, user: currentUser };
+    return this.lotsService.findAll(filters);
   }
 
   @ApiBearerAuth('JWT')
