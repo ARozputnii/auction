@@ -8,7 +8,6 @@ import {
 } from 'class-validator';
 import { Status } from '#app-root/lots/schemas/lot.schema';
 import { Transform } from 'class-transformer';
-import { User } from '#app-root/users/schemas/user.schema';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateLotDto {
@@ -48,5 +47,5 @@ export class CreateLotDto {
   @Transform(({ value }) => new Date(value))
   lotEndTime: Date;
 
-  userId: User;
+  userId: string;
 }

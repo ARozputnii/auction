@@ -4,6 +4,7 @@ import { Lot, LotDocument } from '#app-root/lots/schemas/lot.schema';
 import { Model } from 'mongoose';
 import { CreateLotDto } from '#app-root/lots/dto/create-lot.dto';
 import { UpdateLotDto } from '#app-root/lots/dto/update-lot.dto';
+import { FilterInterface } from '#app-root/lots/interfaces/filter.interface';
 
 @Injectable()
 export class LotsService {
@@ -16,8 +17,17 @@ export class LotsService {
     return lot.save();
   }
 
-  async findAll(): Promise<Lot[]> {
-    return await this.lotModel.find().exec();
+  async findAll(filters: FilterInterface): Promise<Lot[]> {
+    let lots;
+
+    if (filters.own) {
+      const userID = filters.user.id;
+      lots = await this.lotModel.find({ userId: userID }).exec();
+    } else {
+      lots = await this.lotModel.find().exec();
+    }
+
+    return lots;
   }
 
   async findOne(id: string) {
