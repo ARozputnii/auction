@@ -6,6 +6,8 @@ import { CreateUserDto } from '#app-root/users/dto/create-user.dto';
 import { MongoErrorCodesEnum } from '#app-root/database/mongo-error-codes.enum';
 import { IUser } from '#app-root/users/interfaces/user.interface';
 import * as bcrypt from 'bcrypt';
+import { Bid } from '#app-root/bids/schemas/bid.schema';
+import { Lot } from '#app-root/lots/schemas/lot.schema';
 
 @Injectable()
 export class UsersService {
@@ -61,5 +63,19 @@ export class UsersService {
 
   async bcryptPassword(password: string): Promise<string> {
     return await bcrypt.hash(password.toString(), 10);
+  }
+
+  async pushBid(bid: Bid) {
+    const user = await this.userModel.findById(bid.userId);
+    user.bids.push(bid);
+
+    return user.save();
+  }
+
+  async pushLot(lot: Lot) {
+    const user = await this.userModel.findById(lot.userId);
+    // user.lots.push(lot);
+
+    return user.save();
   }
 }

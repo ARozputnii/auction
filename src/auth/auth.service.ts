@@ -17,12 +17,18 @@ export class AuthService {
 
   async validateUser(email: string, password: string) {
     const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new HttpException(
+        'Wrong credentials provided',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const isPasswordMatching = await this.isVerifyPassword(
       password,
-      user?.password,
+      user.password,
     );
 
-    if (!user || !isPasswordMatching) {
+    if (!isPasswordMatching) {
       throw new HttpException(
         'Wrong credentials provided',
         HttpStatus.BAD_REQUEST,
@@ -93,7 +99,7 @@ export class AuthService {
     return await bcrypt.compare(plainTextPassword, hashedPassword);
   }
 
-  private createJwtPlayload(user: IUser): string {
+  createJwtPlayload(user: IUser): string {
     const payload = { id: user._id, email: user.email };
 
     return this.jwtService.sign(payload, {
