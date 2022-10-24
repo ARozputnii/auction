@@ -6,21 +6,22 @@ import { TestCoreBuilder } from '#test/config/test-core-builder';
 import { LotsModule } from '#app-root/lots/lots.module';
 import { SuperTest } from 'supertest';
 import { userMock } from '#test/mocks/entities/user.mock';
+import { IUser } from '../../users/interfaces/user.interface';
+import { setUser } from '../../../test/helpers/setUser';
+import { BidsModule } from '../../bids/bids.module';
 
 describe('LotsController', () => {
   let testCore: TestCore;
   let dbConnection: Connection;
   let request: SuperTest<any>;
   let authorizationToken: string;
-
-  const lotData = lotMock();
+  let lotData;
+  let user: IUser;
 
   beforeAll(async () => {
-    testCore = await TestCoreBuilder.init(LotsModule).build();
-
+    testCore = await TestCoreBuilder.init(LotsModule, BidsModule).build();
     request = testCore.httpRequest;
     dbConnection = testCore.dbConnection;
-    authorizationToken = await getAuthorizationToken(testCore);
   });
 
   afterAll(async () => {
@@ -28,16 +29,26 @@ describe('LotsController', () => {
   });
 
   beforeEach(async () => {
+    user = await setUser(testCore, userMock());
+    lotData = lotMock(user._id);
+    authorizationToken = await getAuthorizationToken(testCore, user);
+  });
+
+  afterEach(async () => {
     await dbConnection.collection('users').deleteMany({});
     await dbConnection.collection('lots').deleteMany({});
   });
 
   describe('findAll', () => {
     describe('when success', () => {
-      const user = userMock();
-
       beforeEach(async () => {
-        const lots = [lotMock(), lotMock(), lotMock(user), lotMock(user)];
+        const anotherUser = await setUser(testCore, userMock());
+        const lots = [
+          lotMock(anotherUser._id),
+          lotMock(anotherUser._id),
+          lotMock(user._id),
+          lotMock(user._id),
+        ];
         await dbConnection.collection('lots').insertMany(lots);
       });
 
@@ -50,17 +61,15 @@ describe('LotsController', () => {
         expect(response.body.length).toBe(4);
       });
 
-      // it('should be return own lots', async () => {
-      //   authorizationToken = await getAuthorizationToken(testCore, user);
-      //   const ownQuery = '?own=true';
-      //
-      //   const response = await request
-      //     .get(`/api/lots${ownQuery}`)
-      //     .set('Authorization', `Bearer ${authorizationToken}`);
-      //
-      //   expect(response.status).toBe(200);
-      //   expect(response.body.length).toBe(2);
-      // });
+      it('should be return own lots', async () => {
+        const ownQuery = '?own=true';
+        const response = await request
+          .get(`/api/lots${ownQuery}`)
+          .set('Authorization', `Bearer ${authorizationToken}`);
+
+        expect(response.status).toBe(200);
+        expect(response.body.length).toBe(2);
+      });
     });
 
     describe('when errors', () => {

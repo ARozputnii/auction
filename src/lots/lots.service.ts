@@ -13,8 +13,7 @@ export class LotsService {
   ) {}
 
   async create(createLotDto: CreateLotDto): Promise<Lot> {
-    const lot = new this.lotModel(createLotDto);
-    return lot.save();
+    return await this.lotModel.create(createLotDto);
   }
 
   async findAll(filters: FilterInterface): Promise<Lot[]> {
@@ -22,16 +21,19 @@ export class LotsService {
 
     if (filters.own) {
       const userID = filters.user.id;
-      lots = await this.lotModel.find({ userId: userID }).exec();
+      lots = await this.lotModel
+        .find({ userId: userID })
+        .populate('bids')
+        .exec();
     } else {
-      lots = await this.lotModel.find().exec();
+      lots = await this.lotModel.find().populate('bids').exec();
     }
 
     return lots;
   }
 
   async findOne(id: string) {
-    return await this.lotModel.findById(id).exec();
+    return await this.lotModel.findById(id).populate('bids').exec();
   }
 
   async update(id: string, updateLotDto: UpdateLotDto) {

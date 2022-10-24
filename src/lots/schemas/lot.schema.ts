@@ -1,6 +1,7 @@
 import mongoose, { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { User } from '#app-root/users/schemas/user.schema';
+import { Bid } from '#app-root/bids/schemas/bid.schema';
 
 export type LotDocument = Lot & Document;
 
@@ -55,6 +56,19 @@ export class Lot {
     ref: 'User',
   })
   userId: User;
+
+  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bid' }] })
+  bids: Bid[];
 }
 
 export const LotSchema = SchemaFactory.createForClass(Lot);
+
+LotSchema.post('save', async function (doc, next) {
+  const user = await this.db.models.User.findById(doc.userId);
+  if (user) {
+    user.lots.push(doc._id);
+    user.save();
+  }
+
+  next();
+});
