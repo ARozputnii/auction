@@ -100,7 +100,7 @@ describe('BidsController', () => {
   describe('findAll', () => {
     describe('when success', () => {
       beforeEach(async () => {
-        const bids = [bidMock(lotID), bidMock(lotID)];
+        const bids = [bidMock(lotID, user._id), bidMock(lotID)];
         await dbConnection.collection('bids').insertMany(bids);
       });
 
