@@ -31,11 +31,3 @@ export class Bid {
 }
 
 export const BidSchema = SchemaFactory.createForClass(Bid);
-
-BidSchema.post('save', function (doc, next) {
-  this.db
-    .collection('lots')
-    .updateOne({ _id: doc.lotId }, { $addToSet: { bids: doc._id } });
-
-  next();
-});
