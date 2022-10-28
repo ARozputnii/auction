@@ -14,6 +14,11 @@ export enum Status {
 @Schema({ timestamps: true })
 export class Lot {
   @Prop({
+    default: mongoose.Types.ObjectId,
+  })
+  _id: string;
+
+  @Prop({
     required: true,
   })
   title: string;
@@ -67,7 +72,7 @@ LotSchema.post('save', async function (doc, next) {
   const user = await this.db.models.User.findById(doc.userId);
   if (user) {
     user.lots.push(doc._id);
-    user.save();
+    await user.save();
   }
 
   next();
