@@ -7,12 +7,13 @@ import { AuthModule } from '#app-root/auth/auth.module';
 import { TestCore } from '#test/config/test-core';
 import { getAuthorizationToken } from '#test/helpers/getAuthorizationToken';
 import { SuperTest } from 'supertest';
+import { setUser } from '#test/helpers/setUser';
 
 describe('AuthController', () => {
   let testCore: TestCore;
   let dbConnection: Connection;
   let request: SuperTest<any>;
-
+  let authorizationToken: string;
   const userData = userMock();
 
   beforeAll(async () => {
@@ -87,7 +88,7 @@ describe('AuthController', () => {
       it('should create a user', async () => {
         const response = await request.post('/api/auth/sign_up').send(userData);
 
-        // expect(response.status).toBe(201);
+        expect(response.status).toBe(201);
         expect(response.body.email).toBe(userData.email);
 
         const user = await dbConnection
@@ -176,6 +177,11 @@ describe('AuthController', () => {
   });
 
   describe('resetPassword', () => {
+    beforeEach(async () => {
+      const user = await setUser(testCore, userData);
+      authorizationToken = await getAuthorizationToken(testCore, user);
+    });
+
     const newPassword = '111111';
     const params: object = {
       currentPassword: userData.password,
@@ -185,11 +191,6 @@ describe('AuthController', () => {
 
     describe('when success', () => {
       it('must change the password', async () => {
-        const authorizationToken = await getAuthorizationToken(
-          testCore,
-          userData,
-        );
-
         const response = await request
           .patch('/api/auth/reset_password')
           .set('Authorization', `Bearer ${authorizationToken}`)
@@ -203,11 +204,6 @@ describe('AuthController', () => {
     describe('when errors', () => {
       describe('when current password is incorrect', () => {
         it('should return an error', async () => {
-          const authorizationToken = await getAuthorizationToken(
-            testCore,
-            userData,
-          );
-
           const params: object = {
             currentPassword: 'incorrect',
             newPassword,
@@ -225,11 +221,6 @@ describe('AuthController', () => {
 
       describe('when passwords do not match', () => {
         it('should return an error', async () => {
-          const authorizationToken = await getAuthorizationToken(
-            testCore,
-            userData,
-          );
-
           const params: object = {
             currentPassword: userData.password,
             newPassword,
@@ -242,7 +233,7 @@ describe('AuthController', () => {
             .send(params);
 
           expect(response.status).toBe(400);
-          expect(response.body.message).toBe('Passwords do not match');
+          expect(response.body.message).toBe('Current password is incorrect');
         });
       });
 
