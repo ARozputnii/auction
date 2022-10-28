@@ -6,9 +6,9 @@ import { TestCoreBuilder } from '#test/config/test-core-builder';
 import { LotsModule } from '#app-root/lots/lots.module';
 import { SuperTest } from 'supertest';
 import { userMock } from '#test/mocks/entities/user.mock';
-import { IUser } from '../../users/interfaces/user.interface';
-import { setUser } from '../../../test/helpers/setUser';
-import { BidsModule } from '../../bids/bids.module';
+import { IUser } from '#app-root/users/interfaces/user.interface';
+import { setUser } from '#test/helpers/setUser';
+import { BidsModule } from '#app-root/bids/bids.module';
 
 describe('LotsController', () => {
   let testCore: TestCore;
@@ -125,7 +125,7 @@ describe('LotsController', () => {
 
   describe('findOne', () => {
     beforeEach(async () => {
-      await dbConnection.collection('lots').insertOne(lotData);
+      await dbConnection.models.Lot.create(lotData);
     });
 
     describe('when success', () => {
@@ -167,7 +167,7 @@ describe('LotsController', () => {
 
   describe('update', () => {
     beforeEach(async () => {
-      await dbConnection.collection('lots').insertOne(lotData);
+      await dbConnection.models.Lot.create(lotData);
     });
 
     describe('when success', () => {
@@ -232,7 +232,7 @@ describe('LotsController', () => {
 
   describe('remove', () => {
     beforeEach(async () => {
-      await dbConnection.collection('lots').insertOne(lotData);
+      await dbConnection.models.Lot.create(lotData);
     });
 
     describe('when success', () => {

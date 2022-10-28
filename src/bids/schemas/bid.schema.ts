@@ -36,13 +36,13 @@ BidSchema.post('save', async function (doc, next) {
   const lot = await this.db.models.Lot.findById(doc.lotId);
   if (lot) {
     lot.bids.push(doc._id);
-    lot.save();
+    await lot.save();
   }
 
   const user = await this.db.models.User.findById(doc.userId);
   if (user) {
     user.bids.push(doc._id);
-    user.save();
+    await user.save();
   }
 
   next();
