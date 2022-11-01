@@ -26,14 +26,22 @@ export class LotsService {
         .populate('bids')
         .exec();
     } else {
-      lots = await this.lotModel.find().populate('bids').exec();
+      lots = await this.lotModel
+        .find({ status: 'inProcess' })
+        .populate('bids')
+        .exec();
     }
 
     return lots;
   }
 
   async findOne(id: string) {
-    return await this.lotModel.findById(id).populate('bids').exec();
+    const lot = await this.lotModel.findOne({_id: id}).populate('bids').exec();
+
+    if (!lot) {
+      throw new NotFoundException();
+    }
+    return lot;
   }
 
   async update(id: string, updateLotDto: UpdateLotDto) {
