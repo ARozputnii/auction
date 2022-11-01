@@ -46,9 +46,9 @@ describe('LotsController', () => {
         const anotherUser = await setUser(testCore, userMock());
         const lots = [
           lotMock(anotherUser._id, 'inProcess'),
-          lotMock(anotherUser._id, 'pendind'),
+          lotMock(anotherUser._id, 'pending'),
           lotMock(user._id, 'inProcess'),
-          lotMock(user._id, 'pendind'),
+          lotMock(user._id, 'pending'),
         ];
         await dbConnection.collection('lots').insertMany(lots);
       });
@@ -165,12 +165,13 @@ describe('LotsController', () => {
 
   describe('update', () => {
     beforeEach(async () => {
+      lotData = lotMock(user._id, 'pending');
       const lot = await dbConnection.models.Lot.create(lotData);
       lotID = lot._id;
     });
 
     describe('when success', () => {
-      it('should be create lot', async () => {
+      it('should be update lot', async () => {
         const lotParams = { title: 'new title' };
         const response = await request
           .patch(`/api/lots/${lotID}`)
@@ -183,6 +184,26 @@ describe('LotsController', () => {
     });
 
     describe('when errors', () => {
+      describe('when status is not inProgress', () => {
+        beforeEach(async () => {
+          lotData = lotMock(user._id, 'inProcess');
+          const lot = await dbConnection.models.Lot.create(lotData);
+          lotID = lot._id;
+        });
+
+        it('should be status 400', async () => {
+          const response = await request
+            .patch(`/api/lots/${lotID}`)
+            .send(lotData)
+            .set('Authorization', `Bearer ${authorizationToken}`);
+
+          expect(response.status).toBe(400);
+          expect(response.body.message).toBe(
+            'Available only for lots with pending status',
+          );
+        });
+      });
+
       describe('when Unauthorized', () => {
         it('should be status 401', async () => {
           const response = await request
@@ -223,12 +244,13 @@ describe('LotsController', () => {
 
   describe('remove', () => {
     beforeEach(async () => {
+      lotData = lotMock(user._id, 'pending');
       const lot = await dbConnection.models.Lot.create(lotData);
       lotID = lot._id;
     });
 
     describe('when success', () => {
-      it('should be create lot', async () => {
+      it('should be delete lot', async () => {
         const response = await request
           .delete(`/api/lots/${lotID}`)
           .set('Authorization', `Bearer ${authorizationToken}`);
@@ -238,6 +260,25 @@ describe('LotsController', () => {
     });
 
     describe('when errors', () => {
+      describe('when status is not inProgress', () => {
+        beforeEach(async () => {
+          lotData = lotMock(user._id, 'inProcess');
+          const lot = await dbConnection.models.Lot.create(lotData);
+          lotID = lot._id;
+        });
+
+        it('should be status 400', async () => {
+          const response = await request
+            .delete(`/api/lots/${lotID}`)
+            .set('Authorization', `Bearer ${authorizationToken}`);
+
+          expect(response.status).toBe(400);
+          expect(response.body.message).toBe(
+            'Available only for lots with pending status',
+          );
+        });
+      });
+
       describe('when Unauthorized', () => {
         it('should be status 401', async () => {
           const response = await request.delete(`/api/lots/some_lotID}`);

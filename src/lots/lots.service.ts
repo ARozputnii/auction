@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Lot, LotDocument } from '#app-root/lots/schemas/lot.schema';
+import { Lot, LotDocument, Status } from '#app-root/lots/schemas/lot.schema';
 import { Model } from 'mongoose';
 import { CreateLotDto } from '#app-root/lots/dto/create-lot.dto';
 import { UpdateLotDto } from '#app-root/lots/dto/update-lot.dto';
@@ -36,25 +41,46 @@ export class LotsService {
   }
 
   async findOne(id: string) {
-    const lot = await this.lotModel.findOne({_id: id}).populate('bids').exec();
-
-    if (!lot) {
-      throw new NotFoundException();
-    }
-    return lot;
+    return await this.setLot(id);
   }
 
   async update(id: string, updateLotDto: UpdateLotDto) {
+    const lot = await this.setLot(id);
+
+    this.checkAccessToOperation(lot);
+
     return await this.lotModel.findOneAndUpdate({ _id: id }, updateLotDto, {
       new: true,
     });
   }
 
   async remove(id: string) {
-    const result = await this.lotModel.deleteOne({ _id: id }).exec();
+    const lot = await this.setLot(id);
 
-    if (!result.deletedCount) {
+    this.checkAccessToOperation(lot);
+
+    return await lot.delete();
+  }
+
+  private async setLot(id: string) {
+    const lot = await this.lotModel
+      .findOne({ _id: id })
+      .populate('bids')
+      .exec();
+
+    if (!lot) {
       throw new NotFoundException();
+    }
+
+    return lot;
+  }
+
+  private checkAccessToOperation(lot: Lot) {
+    if (String(lot.status) !== 'pending') {
+      throw new HttpException(
+        'Available only for lots with pending status',
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 }
