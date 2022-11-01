@@ -2,23 +2,31 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Lot, LotDocument, Status } from '#app-root/lots/schemas/lot.schema';
+import { Lot, LotDocument } from '#app-root/lots/schemas/lot.schema';
 import { Model } from 'mongoose';
 import { CreateLotDto } from '#app-root/lots/dto/create-lot.dto';
 import { UpdateLotDto } from '#app-root/lots/dto/update-lot.dto';
 import { FilterInterface } from '#app-root/lots/interfaces/filter.interface';
+import { LotsProducerService } from '#app-root/lots/lots.producer.service';
 
 @Injectable()
 export class LotsService {
   constructor(
     @InjectModel(Lot.name) private readonly lotModel: Model<LotDocument>,
+    private readonly lotProducerService: LotsProducerService,
   ) {}
 
+  private readonly logger = new Logger(LotsService.name);
+
   async create(createLotDto: CreateLotDto): Promise<Lot> {
-    return await this.lotModel.create(createLotDto);
+    const lot = await this.lotModel.create(createLotDto);
+    this.lotProducerService.startLot(lot);
+
+    return lot;
   }
 
   async findAll(filters: FilterInterface): Promise<Lot[]> {

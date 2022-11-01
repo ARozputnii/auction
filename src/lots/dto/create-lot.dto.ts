@@ -9,6 +9,7 @@ import {
 import { Status } from '#app-root/lots/schemas/lot.schema';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { IsMinDate } from '#app-root/validations/is-min-date.validation';
 
 export class CreateLotDto {
   @ApiProperty()
@@ -39,11 +40,13 @@ export class CreateLotDto {
 
   @ApiProperty()
   @IsDate()
+  @IsMinDate()
   @Transform(({ value }) => new Date(value))
   lotStartTime: Date;
 
   @ApiProperty()
   @IsDate()
+  @IsMinDate('lotStartTime')
   @Transform(({ value }) => new Date(value))
   lotEndTime: Date;
 

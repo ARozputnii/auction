@@ -9,6 +9,7 @@ import { AuthModule } from '#app-root/auth/auth.module';
 import { MailModule } from '#app-root/mail/mail.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from '#app-root/auth/jwt-auth.guard';
+import { JobsModule } from '#app-root/jobs/jobs.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { JwtAuthGuard } from '#app-root/auth/jwt-auth.guard';
     OrdersModule,
     AuthModule,
     MailModule,
+    JobsModule,
   ],
   providers: [
     {
