@@ -15,7 +15,7 @@ import { MailService } from '#app-root/mail/mail.service';
           from: config.get('MAIL_FROM'),
         },
         template: {
-          dir: join(__dirname, 'templates'),
+          dir: join('src/mail', 'templates'),
           adapter: new HandlebarsAdapter(),
           options: {
             strict: true,

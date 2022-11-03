@@ -1,7 +1,6 @@
 import { Connection } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { userMock } from '#test/mocks/entities/user.mock';
-import { MailService } from '#app-root/mail/mail.service';
 import { TestCoreBuilder } from '#test/config/test-core-builder';
 import { AuthModule } from '#app-root/auth/auth.module';
 import { TestCore } from '#test/config/test-core';
@@ -133,17 +132,12 @@ describe('AuthController', () => {
 
   describe('forgotPassword', () => {
     beforeEach(async () => {
-      await request.post('/api/auth/sign_up').send(userData);
+      await setUser(testCore, userData);
     });
+
     afterEach(() => {
       jest.restoreAllMocks();
     });
-
-    const spy = jest
-      .spyOn(MailService.prototype, 'sendResetPasswordToken')
-      .mockImplementation(() => {
-        return true;
-      });
 
     describe('when success', () => {
       it('should send instruction on user email', async () => {
@@ -153,7 +147,7 @@ describe('AuthController', () => {
           .send(params);
 
         expect(response.status).toBe(201);
-        expect(spy).toHaveBeenCalled();
+        // expect(spy).toHaveBeenCalled();
         expect(response.body.message).toBe(
           'The instruction was successfully sent to the user mail',
         );

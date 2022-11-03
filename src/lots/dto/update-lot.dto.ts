@@ -9,7 +9,7 @@ import {
 import { Status } from '#app-root/lots/schemas/lot.schema';
 import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsMinDate } from '#app-root/validations/is-min-date.validation';
+import { LessThanDate } from '#app-root/validations/less-than-date.validation';
 
 export class UpdateLotDto {
   @ApiProperty()
@@ -44,14 +44,14 @@ export class UpdateLotDto {
   @ApiProperty()
   @IsOptional()
   @IsDate()
-  @IsMinDate()
+  @LessThanDate()
   @Transform(({ value }) => new Date(value))
   lotStartTime: Date;
 
   @ApiProperty()
   @IsOptional()
   @IsDate()
-  @IsMinDate('lotStartTime')
+  @LessThanDate('lotStartTime')
   @Transform(({ value }) => new Date(value))
   lotEndTime: Date;
 }

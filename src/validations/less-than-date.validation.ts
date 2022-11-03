@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 
 @ValidatorConstraint()
-export class IsMinDateValidation implements ValidatorConstraintInterface {
+export class LessThanDateValidation implements ValidatorConstraintInterface {
   validate(date: Date, args: ValidationArguments) {
     const startTime = this.getStartTime(args).getTime();
 
@@ -23,7 +23,7 @@ export class IsMinDateValidation implements ValidatorConstraintInterface {
   }
 }
 
-export function IsMinDate(
+export function LessThanDate(
   dateField?: string,
   validationOptions?: ValidationOptions,
 ) {
@@ -33,7 +33,7 @@ export function IsMinDate(
       propertyName: propertyName,
       options: validationOptions,
       constraints: [dateField],
-      validator: IsMinDateValidation,
+      validator: LessThanDateValidation,
     });
   };
 }

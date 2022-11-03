@@ -2,7 +2,6 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
@@ -12,19 +11,19 @@ import { CreateLotDto } from '#app-root/lots/dto/create-lot.dto';
 import { UpdateLotDto } from '#app-root/lots/dto/update-lot.dto';
 import { FilterInterface } from '#app-root/lots/interfaces/filter.interface';
 import { LotsProducerService } from '#app-root/lots/lots.producer.service';
+import { User, UserDocument } from '#app-root/users/schemas/user.schema';
 
 @Injectable()
 export class LotsService {
   constructor(
     @InjectModel(Lot.name) private readonly lotModel: Model<LotDocument>,
+    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     private readonly lotProducerService: LotsProducerService,
   ) {}
 
-  private readonly logger = new Logger(LotsService.name);
-
   async create(createLotDto: CreateLotDto): Promise<Lot> {
     const lot = await this.lotModel.create(createLotDto);
-    this.lotProducerService.startLot(lot);
+    await this.lotProducerService.startLot(lot);
 
     return lot;
   }
@@ -68,6 +67,15 @@ export class LotsService {
     this.checkAccessToOperation(lot);
 
     return await lot.delete();
+  }
+
+  async finishLot(lot) {
+    await this.lotModel.findOneAndUpdate(
+      { _id: lot._id },
+      { status: 'closed' },
+    );
+    const user = await this.userModel.findOne({ _id: lot.userId });
+    await this.lotProducerService.finishLot(user, lot);
   }
 
   private async setLot(id: string) {
