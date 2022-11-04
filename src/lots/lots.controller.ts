@@ -57,7 +57,7 @@ export class LotsController {
   @ApiUnauthorizedResponse(SwaggerOptionsUtil.unauthorized())
   @ApiNotFoundResponse()
   @Get(':id')
-  findOne(@Param('id', new MongoIdValidationPipe()) id: string) {
+  findOne(@Param('id') id: string) {
     return this.lotsService.findOne(id);
   }
 

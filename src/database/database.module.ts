@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-
 import { DatabaseService } from './database.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -11,7 +10,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       useFactory: async (configService: ConfigService) => ({
         uri: configService.get<string>('DB_URL'),
       }),
-
       inject: [ConfigService],
     }),
   ],

@@ -6,7 +6,7 @@ import { Bid } from '#app-root/bids/schemas/bid.schema';
 export type LotDocument = Lot & Document;
 
 export enum Status {
-  pendind,
+  pending,
   inProcess,
   closed,
 }
