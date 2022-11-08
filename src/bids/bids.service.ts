@@ -5,6 +5,7 @@ import { Bid, BidDocument } from '#app-root/bids/schemas/bid.schema';
 import { CreateBidDto } from '#app-root/bids/dto/create-bid.dto';
 import { Lot, LotDocument } from '#app-root/lots/schemas/lot.schema';
 import { LotsService } from '#app-root/lots/lots.service';
+import { BidsGateway } from '#app-root/bids/bids.getaway';
 
 @Injectable()
 export class BidsService {
@@ -12,6 +13,7 @@ export class BidsService {
     @InjectModel(Bid.name) private readonly bidModel: Model<BidDocument>,
     @InjectModel(Lot.name) private readonly lotModel: Model<LotDocument>,
     private readonly lotService: LotsService,
+    private readonly bidGateway: BidsGateway,
   ) {}
 
   async create(createLotDto: CreateBidDto): Promise<Bid> {
@@ -20,6 +22,7 @@ export class BidsService {
     if (bid.proposedPrice >= lot.estimatedPrice) {
       await this.lotService.finishLot(lot);
     }
+    this.bidGateway.io.emit('bids', bid);
     return bid;
   }
 
