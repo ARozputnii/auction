@@ -2,6 +2,7 @@ import mongoose, { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { User } from '#app-root/users/schemas/user.schema';
 import { Bid } from '#app-root/bids/schemas/bid.schema';
+import { Order } from '#app-root/orders/schemas/order.schema';
 
 export type LotDocument = Lot & Document;
 
@@ -61,6 +62,12 @@ export class Lot {
     ref: 'User',
   })
   userId: User;
+
+  @Prop({
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Order',
+  })
+  orderId: Order;
 
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Bid' }] })
   bids: Bid[];
