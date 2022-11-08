@@ -5,6 +5,7 @@ import { BidsController } from './bids.controller';
 import { BidsService } from './bids.service';
 import { LotsModule } from '#app-root/lots/lots.module';
 import { Lot, LotSchema } from '#app-root/lots/schemas/lot.schema';
+import { BidsGateway } from '#app-root/bids/bids.getaway';
 
 @Module({
   imports: [
@@ -15,6 +16,6 @@ import { Lot, LotSchema } from '#app-root/lots/schemas/lot.schema';
     LotsModule,
   ],
   controllers: [BidsController],
-  providers: [BidsService],
+  providers: [BidsService, BidsGateway],
 })
 export class BidsModule {}
