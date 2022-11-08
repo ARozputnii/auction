@@ -12,8 +12,4 @@ export class UpdateOrderDto {
   @IsOptional()
   @IsEnum(ArrivalType)
   arrivalType: ArrivalType;
-
-  @ApiProperty()
-  @IsOptional()
-  currentUserId: string;
 }

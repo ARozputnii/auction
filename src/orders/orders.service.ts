@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { CreateOrderDto } from '#app-root/orders/dto/create-order.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import {
@@ -7,8 +6,17 @@ import {
   OrderDocument,
   Status,
 } from '#app-root/orders/schemas/order.schema';
-import { UpdateOrderDto } from '#app-root/orders/dto/update-order.dto';
 import { Lot, LotDocument } from '#app-root/lots/schemas/lot.schema';
+import { UpdateStatusPayloadInterface } from '#app-root/orders/interfaces/update-status-payload.interface';
+import { CreatePayloadInterface } from '#app-root/orders/interfaces/create-payload.interface';
+import { TotalUpdatePayloadInterface } from '#app-root/orders/interfaces/total-update-payload.interface';
+import { OrderOperationType } from '#app-root/orders/types/order-operation.type';
+
+const OperationStatusMapping: Record<OrderOperationType, Status> = {
+  receive: Status.sent,
+  execute: Status.pending,
+  update: Status.pending,
+};
 
 @Injectable()
 export class OrdersService {
@@ -17,38 +25,43 @@ export class OrdersService {
     @InjectModel(Lot.name) private readonly lotModel: Model<LotDocument>,
   ) {}
 
-  async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    return await this.orderModel.create(createOrderDto);
+  async create(createPayload: CreatePayloadInterface): Promise<Order> {
+    const createParams = {
+      ...createPayload.createOrderDto,
+      userId: createPayload.currentUserId,
+    };
+    return await this.orderModel.create(createParams);
   }
 
-  async update(
-    _id: string,
-    updateOrderDto: UpdateOrderDto,
-    operation: string,
-  ): Promise<Order> {
-    const order = await this.orderModel.findOne({ _id });
-    const currentUserId = updateOrderDto.currentUserId;
+  async update(updatePayload: TotalUpdatePayloadInterface): Promise<Order> {
+    const order = await this.orderModel.findOne({ _id: updatePayload.id });
 
-    this.checkAccessToOperation(order, operation);
-
-    if (operation) {
-      return await this.makeOperation(operation, order, currentUserId);
-    } else {
-      return await this.orderModel.findOneAndUpdate({ _id }, updateOrderDto, {
-        new: true,
-      });
+    if (String(order.userId) !== updatePayload.currentUserId) {
+      throw new HttpException(
+        'Available only to the owner of the order',
+        HttpStatus.BAD_REQUEST,
+      );
     }
+    this.checkAccessbyOperation(order);
+
+    return await this.orderModel.findOneAndUpdate(
+      { _id: updatePayload.id },
+      updatePayload.updateOrderDto,
+      {
+        new: true,
+      },
+    );
   }
 
-  private async makeOperation(
-    operation: string,
-    order: Order,
-    currentUserId: string,
-  ) {
-    if (operation === 'execute') {
-      return await this.executeOperation(order, currentUserId);
+  async switchStatus(updatePayload: UpdateStatusPayloadInterface) {
+    const order = await this.orderModel.findOne({ _id: updatePayload.id });
+
+    this.checkAccessbyOperation(order, updatePayload.operation);
+
+    if (updatePayload.operation === 'execute') {
+      return await this.executeOperation(order, updatePayload.currentUserId);
     } else {
-      return await this.receiveOperation(order, currentUserId);
+      return await this.receiveOperation(order, updatePayload.currentUserId);
     }
   }
 
@@ -58,50 +71,44 @@ export class OrdersService {
   ): Promise<Order> {
     const lot = await this.lotModel.findById(order.lotId);
 
-    if (String(lot.userId) === currentUserId) {
-      return await this.orderModel.findOneAndUpdate(
-        { _id: order._id },
-        { status: Status.sent },
-        { new: true },
-      );
-    } else {
+    if (String(lot.userId) !== currentUserId) {
       throw new HttpException(
         'Available only to the lot winner.',
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    return await this.orderModel.findOneAndUpdate(
+      { _id: order._id },
+      { status: Status.sent },
+      { new: true },
+    );
   }
 
   private async receiveOperation(
     order: Order,
     currentUserId: string,
   ): Promise<Order> {
-    if (String(order.userId) === currentUserId) {
-      return await this.orderModel.findOneAndUpdate(
-        { _id: order._id },
-        { status: Status.delivered },
-        { new: true },
-      );
-    } else {
+    if (String(order.userId) !== currentUserId) {
       throw new HttpException(
         'Available only to the owner of the order',
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    return await this.orderModel.findOneAndUpdate(
+      { _id: order._id },
+      { status: Status.delivered },
+      { new: true },
+    );
   }
 
-  private checkAccessToOperation(order: Order, operation: string): void {
-    let status: string;
+  private checkAccessbyOperation(order: Order, operation = 'update'): void {
+    const status = order.status;
 
-    if (operation === 'receive') {
-      status = String(Status.sent);
-    } else {
-      status = String(Status.pending);
-    }
-
-    if (String(order.status) !== status) {
+    if (String(OperationStatusMapping[operation]) !== String(status)) {
       throw new HttpException(
-        `Available only for orders with ${Status[status]} status`,
+        `Not available for orders with this status`,
         HttpStatus.BAD_REQUEST,
       );
     }

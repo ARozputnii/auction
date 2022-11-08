@@ -129,7 +129,62 @@ describe('OrdersController', () => {
         expect(response.status).toBe(200);
         expect(response.body.arrivalLocation).toBe(arrivalLocation);
       });
+    });
 
+    describe('when errors', () => {
+      describe('when status is not pending', () => {
+        beforeEach(async () => {
+          orderData.status = 'sent';
+          const order = await dbConnection.models.Order.create(orderData);
+          orderId = order._id;
+        });
+
+        it('should be status 400', async () => {
+          const arrivalLocation = faker.address.streetAddress();
+          const response = await request
+            .patch(`/api/orders/${orderId}`)
+            .send({ arrivalLocation })
+            .set('Authorization', `Bearer ${authorizationToken}`);
+
+          expect(response.status).toBe(400);
+          expect(response.body.message).toBe(
+            'Not available for orders with this status',
+          );
+        });
+      });
+
+      describe('when Unauthorized', () => {
+        it('should be status 401', async () => {
+          const response = await request
+            .patch(`/api/orders/${orderId}`)
+            .send(orderData);
+
+          expect(response.status).toBe(401);
+        });
+      });
+
+      describe('when order not found', () => {
+        it('should be return Not Found!', async () => {
+          const response = await request
+            .patch(`/api/orders/some_lot_ID`)
+            .set('Authorization', `Bearer ${authorizationToken}`);
+
+          expect(response.status).toBe(404);
+          expect(response.body.message).toBe('Not Found');
+        });
+      });
+    });
+  });
+
+  describe('switchStatus', () => {
+    let orderId;
+
+    beforeEach(async () => {
+      const order = await dbConnection.models.Order.create(orderData);
+      orderId = order._id;
+    });
+
+    describe('when success', () => {
       describe('when receive operation', () => {
         beforeEach(async () => {
           orderData.status = Status.sent;
@@ -139,7 +194,7 @@ describe('OrdersController', () => {
 
         it('should be update lot', async () => {
           const response = await request
-            .patch(`/api/orders/${orderId}?operation=receive`)
+            .patch(`/api/orders/switchStatus/${orderId}?operation=receive`)
             .set('Authorization', `Bearer ${authorizationToken}`);
 
           expect(response.status).toBe(200);
@@ -150,7 +205,7 @@ describe('OrdersController', () => {
       describe('when execute operation', () => {
         it('should be update lot', async () => {
           const response = await request
-            .patch(`/api/orders/${orderId}?operation=execute`)
+            .patch(`/api/orders/switchStatus/${orderId}?operation=execute`)
             .set('Authorization', `Bearer ${authorizationToken}`);
 
           expect(response.status).toBe(200);
@@ -170,13 +225,13 @@ describe('OrdersController', () => {
         it('should be status 400', async () => {
           const arrivalLocation = faker.address.streetAddress();
           const response = await request
-            .patch(`/api/orders/${orderId}`)
+            .patch(`/api/orders/switchStatus/${orderId}`)
             .send({ arrivalLocation })
             .set('Authorization', `Bearer ${authorizationToken}`);
 
           expect(response.status).toBe(400);
           expect(response.body.message).toBe(
-            'Available only for orders with pending status',
+            'Not available for orders with this status',
           );
         });
       });
@@ -184,7 +239,7 @@ describe('OrdersController', () => {
       describe('when Unauthorized', () => {
         it('should be status 401', async () => {
           const response = await request
-            .patch(`/api/orders/${orderId}`)
+            .patch(`/api/orders/switchStatus/${orderId}`)
             .send(orderData);
 
           expect(response.status).toBe(401);
@@ -194,7 +249,7 @@ describe('OrdersController', () => {
       describe('when order not found', () => {
         it('should be return Not Found!', async () => {
           const response = await request
-            .patch(`/api/orders/some_lot_ID`)
+            .patch(`/api/orders/switchStatus/some_lot_ID`)
             .set('Authorization', `Bearer ${authorizationToken}`);
 
           expect(response.status).toBe(404);

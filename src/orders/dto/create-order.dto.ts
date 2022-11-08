@@ -21,6 +21,4 @@ export class CreateOrderDto {
   @IsMongoId()
   @IsNotEmpty()
   bidId: string;
-
-  userId: string;
 }
